@@ -27,6 +27,8 @@ python3 -m unittest discover -s tests -v
 
 ![Example blocks in two languages](examples/preview.png)
 
+The generator grew out of monthly work for a Russian Orthodox parish abroad. See the [case study](https://kabago.ru/cases/schedule-generator/).
+
 ## JSON contract
 
 One UTF-8 JSON file describes one month in one language. The full schema is in [`schema/month.schema.json`](schema/month.schema.json). A brief example:

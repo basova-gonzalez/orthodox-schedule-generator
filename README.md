@@ -27,6 +27,8 @@ python3 -m unittest discover -s tests -v
 
 ![Пример двух языковых блоков](examples/preview.png)
 
+Генератор вырос из ежемесячной работы для зарубежного прихода Русской православной церкви. Подробнее — в [кейсе](https://kabago.ru/cases/schedule-generator/).
+
 ## Контракт JSON
 
 Один UTF-8 JSON-файл описывает один месяц и один язык. Полная схема — [`schema/month.schema.json`](schema/month.schema.json). Краткий вид:
