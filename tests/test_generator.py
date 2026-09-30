@@ -130,3 +130,36 @@ class InputContractTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("JSON проверен: дней 4", result.stdout)
             self.assertFalse(target.exists())
+
+
+class MonthFormsTests(unittest.TestCase):
+    def test_russian_day_uses_genitive_but_heading_nominative(self):
+        settings = load_settings(ROOT / "settings.json")
+        payload = json.loads((ROOT / "examples/month_ru.json").read_text(encoding="utf-8"))
+        blocks = structured_days_to_blocks(payload["days"], 2026, 4)
+        html = render_html(blocks, language="ru", year=2026, month=4, settings=settings)
+        self.assertIn("Расписание богослужений — апрель 2026", html)
+        self.assertIn("4 апреля, суббота", html)
+        self.assertNotIn("4 апрель, суббота", html)
+
+    def test_missing_day_form_falls_back_to_heading_form(self):
+        settings = load_settings(ROOT / "settings.json")
+        settings["languages"]["en"].pop("day_months")
+        payload = json.loads((ROOT / "examples/month_en.json").read_text(encoding="utf-8"))
+        blocks = structured_days_to_blocks(payload["days"], 2026, 4)
+        html = render_html(blocks, language="en", year=2026, month=4, settings=settings)
+        self.assertIn("4 April, Saturday", html)
+
+    def test_settings_schema_and_day_form_length(self):
+        schema = json.loads((ROOT / "schema/settings.schema.json").read_text(encoding="utf-8"))
+        labels = schema["properties"]["languages"]["additionalProperties"]
+        self.assertIn("months", labels["required"])
+        self.assertNotIn("day_months", labels["required"])
+        self.assertIn("day_months", labels["properties"])
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            settings = load_settings(ROOT / "settings.json")
+            settings["languages"]["ru"]["day_months"] = ["апреля"]
+            path.write_text(json.dumps(settings, ensure_ascii=False), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "ru.day_months: нужно 12"):
+                load_settings(path)

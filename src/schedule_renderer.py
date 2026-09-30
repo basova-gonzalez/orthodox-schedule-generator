@@ -101,7 +101,8 @@ def render_html(blocks, *, language, year, month, settings):
         day = block["date"]
         highlight = ' os-highlight' if is_highlighted(day, additional) else ''
         weekday = labels["weekdays"][day.weekday()]
-        visible_date = f"{day.day} {labels['months'][month - 1]}, {weekday}"
+        day_months = labels.get("day_months", labels["months"])
+        visible_date = f"{day.day} {day_months[month - 1]}, {weekday}"
         out.append(f'<div class="os-day{highlight}" data-schedule-date="{day.isoformat()}">')
         out.append('<div class="os-left">')
         out.append(f'<div class="os-date">{escape(visible_date, quote=True)}</div>')

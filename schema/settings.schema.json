@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Настройки генератора расписания",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["colors", "font_family", "max_width_px", "additional_highlight_dates", "languages"],
+  "properties": {
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "accent", "red"],
+      "properties": {
+        "text": {"$ref": "#/$defs/color"},
+        "accent": {"$ref": "#/$defs/color"},
+        "red": {"$ref": "#/$defs/color"}
+      }
+    },
+    "font_family": {"type": "string", "minLength": 1, "maxLength": 120, "description": "Список локальных или системных семейств шрифта; CSS-разметка недопустима."},
+    "max_width_px": {"type": "integer", "minimum": 320, "maximum": 1600},
+    "additional_highlight_dates": {"type": "array", "items": {"type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}},
+    "languages": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[a-z]{2,8}(-[A-Za-z0-9]{2,8})*$"},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "months", "weekdays"],
+        "properties": {
+          "title": {"type": "string", "pattern": "\\S"},
+          "months": {"$ref": "#/$defs/months", "description": "Форма месяца для заголовка: апрель 2026."},
+          "day_months": {"$ref": "#/$defs/months", "description": "Необязательная форма для даты дня: 4 апреля. Если отсутствует, используются months."},
+          "weekdays": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"type": "string", "pattern": "\\S"}}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "color": {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"},
+    "months": {"type": "array", "minItems": 12, "maxItems": 12, "items": {"type": "string", "pattern": "\\S"}}
+  }
+}

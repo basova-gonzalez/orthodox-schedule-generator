@@ -1,18 +1,92 @@
 {
-  "colors": {"text": "#262626", "accent": "#39566B", "red": "#A42B32"},
+  "colors": {
+    "text": "#262626",
+    "accent": "#39566B",
+    "red": "#A42B32"
+  },
   "font_family": "Arial, sans-serif",
   "max_width_px": 960,
   "additional_highlight_dates": [],
   "languages": {
     "ru": {
       "title": "Расписание богослужений",
-      "months": ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
-      "weekdays": ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
+      "months": [
+        "январь",
+        "февраль",
+        "март",
+        "апрель",
+        "май",
+        "июнь",
+        "июль",
+        "август",
+        "сентябрь",
+        "октябрь",
+        "ноябрь",
+        "декабрь"
+      ],
+      "weekdays": [
+        "понедельник",
+        "вторник",
+        "среда",
+        "четверг",
+        "пятница",
+        "суббота",
+        "воскресенье"
+      ],
+      "day_months": [
+        "января",
+        "февраля",
+        "марта",
+        "апреля",
+        "мая",
+        "июня",
+        "июля",
+        "августа",
+        "сентября",
+        "октября",
+        "ноября",
+        "декабря"
+      ]
     },
     "en": {
       "title": "Service schedule",
-      "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-      "weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+      "months": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+      ],
+      "weekdays": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ],
+      "day_months": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+      ]
     }
   }
 }

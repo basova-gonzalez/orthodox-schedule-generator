@@ -39,10 +39,20 @@ def load_settings(path):
     for code, labels in data["languages"].items():
         if not re.fullmatch(r"[a-z]{2,8}(?:-[A-Za-z0-9]{2,8})*", code):
             raise ValueError(f"Неверный код языка: {code}")
-        _object(labels, ("title", "months", "weekdays"), code)
+        if not isinstance(labels, dict):
+            raise ValueError(f"{code}: нужен объект с подписями языка")
+        required = {"title", "months", "weekdays"}
+        optional = {"day_months"}
+        if missing := sorted(required - set(labels)):
+            raise ValueError(f"{code}: нет обязательных полей {', '.join(missing)}")
+        if extra := sorted(set(labels) - required - optional):
+            raise ValueError(f"{code}: лишние поля {', '.join(extra)}")
         if not isinstance(labels["title"], str) or not labels["title"].strip():
             raise ValueError(f"{code}.title: нужна непустая строка")
-        for field, length in (("months", 12), ("weekdays", 7)):
+        fields = [("months", 12), ("weekdays", 7)]
+        if "day_months" in labels:
+            fields.append(("day_months", 12))
+        for field, length in fields:
             values = labels[field]
             if not isinstance(values, list) or len(values) != length or any(not isinstance(v, str) or not v.strip() for v in values):
                 raise ValueError(f"{code}.{field}: нужно {length} непустых подписей")
