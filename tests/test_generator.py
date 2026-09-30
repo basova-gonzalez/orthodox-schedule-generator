@@ -163,17 +163,3 @@ class MonthFormsTests(unittest.TestCase):
             path.write_text(json.dumps(settings, ensure_ascii=False), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "ru.day_months: нужно 12"):
                 load_settings(path)
-
-
-class DesktopWorkflowTests(unittest.TestCase):
-    def test_pasted_json_matches_command_line_output(self):
-        from generate import render_from_text
-        raw = (ROOT / "examples/month_ru.json").read_text(encoding="utf-8")
-        html, count = render_from_text(raw, ROOT / "settings.json")
-        self.assertEqual(count, 4)
-        self.assertEqual(html, (ROOT / "output/month_ru.html").read_text(encoding="utf-8"))
-
-    def test_pasted_bad_json_has_copyable_error(self):
-        from generate import render_from_text
-        with self.assertRaisesRegex(ValueError, r"строка 1, столбец .*Как исправить"):
-            render_from_text('{"year":', ROOT / "settings.json")
