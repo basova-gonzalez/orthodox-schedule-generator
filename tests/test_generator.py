@@ -87,3 +87,46 @@ class GeneratorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class InputContractTests(unittest.TestCase):
+    def test_schema_matches_examples_and_raw_text(self):
+        schema = json.loads((ROOT / "schema/month.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
+        self.assertFalse(schema["additionalProperties"])
+        self.assertEqual(set(schema["required"]), {"year", "month", "language", "days"})
+        for lang in ("ru", "en"):
+            raw = (ROOT / "examples" / f"raw_{lang}.txt").read_text(encoding="utf-8")
+            payload = json.loads((ROOT / "examples" / f"month_{lang}.json").read_text(encoding="utf-8"))
+            for day in payload["days"]:
+                for line in day["description"]:
+                    self.assertIn(line, raw)
+                for service in day["services"]:
+                    self.assertIn(service["time"], raw)
+                    for field in ("title", "hours", "priest"):
+                        if service[field]:
+                            self.assertIn(service[field], raw)
+
+    def test_error_identifies_day_field_and_repair(self):
+        from generate import validate
+        sample = json.loads((ROOT / "examples/month_ru.json").read_text(encoding="utf-8"))
+        sample["days"][1]["services"][0]["time"] = "9 утра"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bad.json"
+            path.write_text(json.dumps(sample, ensure_ascii=False), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, r"День 2 .*поле services\[1\]\.time:.*Как исправить"):
+                validate(path, ROOT / "settings.json")
+            path.write_text('{"year": 2026,', encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, r"строка 1, столбец .*Как исправить"):
+                validate(path, ROOT / "settings.json")
+
+    def test_check_mode_does_not_write_html(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "should-not-exist.html"
+            result = subprocess.run([sys.executable, str(ROOT / "src/generate.py"), "--check",
+                                     str(ROOT / "examples/month_ru.json"), str(target)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("JSON проверен: дней 4", result.stdout)
+            self.assertFalse(target.exists())

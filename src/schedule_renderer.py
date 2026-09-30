@@ -9,51 +9,68 @@ from church_calendar import is_highlighted
 _INVISIBLE = str.maketrans({ord(char): None for char in '\u200b\u200e\u200f\u2060\ufeff'})
 
 
-def _text(value, field):
+def _problem(day_number, day_value, field, problem, fix):
+    label = f"День {day_number} ({day_value})" if day_value else f"День {day_number}"
+    raise ValueError(f"{label}, поле {field}: {problem}. Как исправить: {fix}")
+
+
+def _text(value, day_number, day_value, field):
     if not isinstance(value, str):
-        raise TypeError(f"{field}: нужна строка")
+        _problem(day_number, day_value, field, "нужна строка", "поставьте текст в двойных кавычках; если сведений нет — пустую строку")
     return value.translate(_INVISIBLE).strip()
 
 
-def _lines(value, field):
-    if not isinstance(value, list):
-        raise TypeError(f"{field}: нужен список строк")
-    return [_text(line, f"{field}[{i}]") for i, line in enumerate(value) if _text(line, f"{field}[{i}]")]
+def _keys(value, expected, day_number, day_value, field):
+    if not isinstance(value, dict):
+        _problem(day_number, day_value, field, "нужен объект JSON", "используйте фигурные скобки с полями " + ", ".join(expected))
+    missing = sorted(set(expected) - set(value))
+    extra = sorted(set(value) - set(expected))
+    if missing:
+        _problem(day_number, day_value, field, "нет поля " + ", ".join(missing), "добавьте обязательное поле; для неизвестных hours/priest используйте пустую строку")
+    if extra:
+        _problem(day_number, day_value, field, "лишнее поле " + ", ".join(extra), "удалите его или перенесите текст в подходящее поле схемы")
 
 
 def structured_days_to_blocks(days, year, month):
-    """Validate language-independent day fields and adapt them to render blocks.
-
-    Unlike the old keyword parser, this never infers a field from its content.
-    """
+    """Validate explicit fields and adapt them to safe render blocks."""
     if not isinstance(days, list):
-        raise TypeError("days: нужен список")
+        raise ValueError("Поле days: нужен список дней. Как исправить: заключите дни в квадратные скобки")
     blocks, seen = [], set()
-    for i, item in enumerate(days):
-        if not isinstance(item, dict) or set(item) != {"date", "description", "services"}:
-            raise ValueError(f"days[{i}]: нужны date, description, services")
-        raw_date = _text(item["date"], f"days[{i}].date")
+    for index, item in enumerate(days, 1):
+        raw_label = item.get("date") if isinstance(item, dict) else None
+        label = raw_label if isinstance(raw_label, str) else None
+        _keys(item, ("date", "description", "services"), index, label, "day")
+        raw_date = _text(item["date"], index, label, "date")
+        if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", raw_date):
+            _problem(index, label, "date", "нужен формат YYYY-MM-DD", "запишите гражданскую дату, например 2026-04-07")
         try:
             day = date.fromisoformat(raw_date)
-        except ValueError as error:
-            raise ValueError(f"days[{i}].date: нужна дата YYYY-MM-DD") from error
-        if day.isoformat() != raw_date or (day.year, day.month) != (year, month):
-            raise ValueError(f"days[{i}].date: дата вне месяца или не в формате YYYY-MM-DD")
+        except ValueError:
+            _problem(index, label, "date", "такой календарной даты нет", "сверьте число, месяц и год с исходным расписанием")
+        if (day.year, day.month) != (year, month):
+            _problem(index, label, "date", "дата вне месяца year/month", "сверьте дату с year и month в начале JSON")
         if day in seen:
-            raise ValueError(f"days[{i}].date: повтор даты")
+            _problem(index, label, "date", "повтор даты", "оставьте один объект для этой даты и объедините службы")
         seen.add(day)
-        description = _lines(item["description"], f"days[{i}].description")
-        if not isinstance(item["services"], list):
-            raise TypeError(f"days[{i}].services: нужен список")
-        services = []
-        for j, service in enumerate(item["services"]):
-            if not isinstance(service, dict) or set(service) != {"time", "title", "hours", "priest"}:
-                raise ValueError(f"days[{i}].services[{j}]: нужны time, title, hours, priest")
-            time = _text(service["time"], "time")
-            if not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", time):
-                raise ValueError(f"days[{i}].services[{j}].time: нужно HH:MM")
-            services.append({key: _text(service[key], key) for key in ("title", "hours", "priest")} | {"time": time})
-        blocks.append({"date": day, "description": description, "services": services})
+        description = item["description"]
+        if not isinstance(description, list):
+            _problem(index, label, "description", "нужен список строк", "заключите строки описания в квадратные скобки")
+        clean_description = [_text(line, index, label, f"description[{n}]") for n, line in enumerate(description, 1)]
+        clean_description = [line for line in clean_description if line]
+        services = item["services"]
+        if not isinstance(services, list):
+            _problem(index, label, "services", "нужен список служб", "заключите службы в квадратные скобки; если их нет, используйте []")
+        clean_services = []
+        for n, service in enumerate(services, 1):
+            prefix = f"services[{n}]"
+            _keys(service, ("time", "title", "hours", "priest"), index, label, prefix)
+            clean = {key: _text(service[key], index, label, f"{prefix}.{key}") for key in ("time", "title", "hours", "priest")}
+            if not clean["title"]:
+                _problem(index, label, f"{prefix}.title", "название службы пустое", "перенесите название из исходника; если оно неясно, спросите составителя")
+            if not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", clean["time"]):
+                _problem(index, label, f"{prefix}.time", "нужно время HH:MM в 24-часовом формате", "сверьте время с источником и запишите, например, 09:00; если оно неизвестно, спросите составителя")
+            clean_services.append(clean)
+        blocks.append({"date": day, "description": clean_description, "services": clean_services})
     return sorted(blocks, key=lambda block: block["date"])
 
 

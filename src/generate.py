@@ -4,13 +4,19 @@ from datetime import date
 import json
 from pathlib import Path
 import re
+import sys
 
 from schedule_renderer import render_html, structured_days_to_blocks
 
 
 def _object(value, keys, name):
-    if not isinstance(value, dict) or set(value) != set(keys):
-        raise ValueError(f"{name}: ожидаются поля {', '.join(keys)}")
+    if not isinstance(value, dict):
+        raise ValueError(f"Поле {name}: нужен объект JSON. Как исправить: используйте фигурные скобки")
+    missing, extra = sorted(set(keys) - set(value)), sorted(set(value) - set(keys))
+    if missing:
+        raise ValueError(f"Поле {name}: нет {', '.join(missing)}. Как исправить: добавьте обязательные поля по schema/month.schema.json")
+    if extra:
+        raise ValueError(f"Поле {name}: лишнее {', '.join(extra)}. Как исправить: удалите поля вне схемы")
     return value
 
 
@@ -43,30 +49,52 @@ def load_settings(path):
     return data
 
 
-def generate(input_path, output_path, settings_path):
+def validate(input_path, settings_path):
     settings = load_settings(settings_path)
-    payload = _object(json.loads(Path(input_path).read_text(encoding="utf-8")),
-                      ("year", "month", "language", "days"), "input")
+    try:
+        payload = json.loads(Path(input_path).read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise ValueError(f"JSON, строка {error.lineno}, столбец {error.colno}: {error.msg}. Как исправить: проверьте кавычки, запятые и скобки; передайте это сообщение нейросети") from error
+    payload = _object(payload, ("year", "month", "language", "days"), "input")
     year, month, language = payload["year"], payload["month"], payload["language"]
-    if type(year) is not int or type(month) is not int or not 1900 <= year <= 2099 or not 1 <= month <= 12:
-        raise ValueError("year/month: нужен год 1900–2099 и месяц 1–12")
+    if type(year) is not int or not 1900 <= year <= 2099:
+        raise ValueError("Поле year: нужен целый год 1900–2099. Как исправить: укажите год из расписания числом")
+    if type(month) is not int or not 1 <= month <= 12:
+        raise ValueError("Поле month: нужно число 1–12. Как исправить: укажите месяц из расписания числом")
     if not isinstance(language, str) or language not in settings["languages"]:
-        raise ValueError("language: нет подписей для этого языка в settings.json")
+        raise ValueError("Поле language: нет подписей для этого языка в settings.json. Как исправить: выберите имеющийся код или добавьте его подписи в settings.json")
     blocks = structured_days_to_blocks(payload["days"], year, month)
-    html = render_html(blocks, language=language, year=year, month=month, settings=settings)
+    return payload, settings, blocks
+
+
+def generate(input_path, output_path, settings_path):
+    payload, settings, blocks = validate(input_path, settings_path)
+    html = render_html(blocks, language=payload["language"], year=payload["year"], month=payload["month"], settings=settings)
     Path(output_path).write_text(html, encoding="utf-8")
     return len(blocks)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Создать самостоятельный HTML-блок расписания")
+    parser = argparse.ArgumentParser(description="Проверить JSON или создать самостоятельный HTML-блок расписания")
     parser.add_argument("input", help="JSON с месяцем и днями")
-    parser.add_argument("output", help="путь для HTML-блока")
+    parser.add_argument("output", nargs="?", help="путь для HTML-блока")
+    parser.add_argument("--check", action="store_true", help="только проверить JSON, без записи HTML")
     parser.add_argument("--settings", default=str(Path(__file__).resolve().parents[1] / "settings.json"))
     args = parser.parse_args()
-    count = generate(args.input, args.output, args.settings)
-    print(f"Создано: {args.output}; дней: {count}")
+    if not args.check and not args.output:
+        parser.error("укажите выходной HTML или добавьте --check")
+    try:
+        if args.check:
+            _, _, blocks = validate(args.input, args.settings)
+            print(f"JSON проверен: дней {len(blocks)}")
+        else:
+            count = generate(args.input, args.output, args.settings)
+            print(f"Создано: {args.output}; дней: {count}")
+    except (ValueError, TypeError, OSError) as error:
+        print(f"Ошибка: {error}", file=sys.stderr)
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
