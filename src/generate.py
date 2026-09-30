@@ -59,10 +59,11 @@ def load_settings(path):
     return data
 
 
-def validate(input_path, settings_path):
+def validate_text(raw_json, settings_path):
+    """Validate JSON text from a file, clipboard, or desktop window."""
     settings = load_settings(settings_path)
     try:
-        payload = json.loads(Path(input_path).read_text(encoding="utf-8"))
+        payload = json.loads(raw_json)
     except json.JSONDecodeError as error:
         raise ValueError(f"JSON, строка {error.lineno}, столбец {error.colno}: {error.msg}. Как исправить: проверьте кавычки, запятые и скобки; передайте это сообщение нейросети") from error
     payload = _object(payload, ("year", "month", "language", "days"), "input")
@@ -77,11 +78,20 @@ def validate(input_path, settings_path):
     return payload, settings, blocks
 
 
-def generate(input_path, output_path, settings_path):
-    payload, settings, blocks = validate(input_path, settings_path)
+def validate(input_path, settings_path):
+    return validate_text(Path(input_path).read_text(encoding="utf-8"), settings_path)
+
+
+def render_from_text(raw_json, settings_path):
+    payload, settings, blocks = validate_text(raw_json, settings_path)
     html = render_html(blocks, language=payload["language"], year=payload["year"], month=payload["month"], settings=settings)
+    return html, len(blocks)
+
+
+def generate(input_path, output_path, settings_path):
+    html, count = render_from_text(Path(input_path).read_text(encoding="utf-8"), settings_path)
     Path(output_path).write_text(html, encoding="utf-8")
-    return len(blocks)
+    return count
 
 
 def main():
