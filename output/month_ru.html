@@ -1,0 +1,59 @@
+<style>
+.orthodox-schedule {box-sizing:border-box;max-width:960px;margin:0 auto;padding:24px 20px;color:#262626;font-family:Arial, sans-serif;line-height:1.5}
+.orthodox-schedule * {box-sizing:border-box}
+.orthodox-schedule .os-title {margin:0 0 20px;font-size:clamp(1.5rem,3vw,2rem);color:#39566B}
+.orthodox-schedule .os-day {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px;padding:22px 0;border-bottom:1px solid #dddddd}
+.orthodox-schedule .os-day:last-child {border-bottom:0}
+.orthodox-schedule .os-date {font-size:1.25rem;font-weight:700;color:#39566B}
+.orthodox-schedule .os-day.os-highlight .os-date {color:#A42B32}
+.orthodox-schedule .os-description {margin-top:8px;white-space:pre-line}
+.orthodox-schedule .os-service + .os-service {margin-top:16px}
+.orthodox-schedule .os-time {font-weight:700}
+.orthodox-schedule .os-hours,.orthodox-schedule .os-priest {margin-top:4px}
+@media(max-width:640px) {.orthodox-schedule .os-day {grid-template-columns:1fr;gap:10px}.orthodox-schedule {padding:16px}}
+</style>
+<section class="orthodox-schedule" lang="ru">
+<h2 class="os-title">Расписание богослужений — апрель 2026</h2>
+<div class="os-day" data-schedule-date="2026-04-04">
+<div class="os-left">
+<div class="os-date">4 апрель, суббота</div>
+<div class="os-description">Суббота второй седмицы.
+Вымышленный пример описания дня.</div>
+</div><div class="os-right">
+<div class="os-service">
+<div><span class="os-time">17:00</span> — Вечернее богослужение</div>
+<div class="os-hours">Храм открыт с 16:30</div>
+<div class="os-priest">Священник: пример</div>
+</div>
+</div></div>
+<div class="os-day os-highlight" data-schedule-date="2026-04-05">
+<div class="os-left">
+<div class="os-date">5 апрель, воскресенье</div>
+<div class="os-description">Вход Господень в Иерусалим.</div>
+</div><div class="os-right">
+<div class="os-service">
+<div><span class="os-time">09:00</span> — Божественная литургия</div>
+<div class="os-hours">Храм открыт с 08:30</div>
+<div class="os-priest">Священник: пример</div>
+</div>
+</div></div>
+<div class="os-day os-highlight" data-schedule-date="2026-04-07">
+<div class="os-left">
+<div class="os-date">7 апрель, вторник</div>
+<div class="os-description">Благовещение Пресвятой Богородицы.</div>
+</div><div class="os-right">
+<div class="os-service">
+<div><span class="os-time">10:00</span> — Праздничная литургия</div>
+</div>
+</div></div>
+<div class="os-day os-highlight" data-schedule-date="2026-04-12">
+<div class="os-left">
+<div class="os-date">12 апрель, воскресенье</div>
+<div class="os-description">Пасха Христова.</div>
+</div><div class="os-right">
+<div class="os-service">
+<div><span class="os-time">00:00</span> — Пасхальное богослужение</div>
+<div class="os-priest">Священник: пример</div>
+</div>
+</div></div>
+</section>

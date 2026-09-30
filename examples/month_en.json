@@ -1,0 +1,11 @@
+{
+  "year": 2026,
+  "month": 4,
+  "language": "en",
+  "days": [
+    {"date": "2026-04-04", "description": ["Saturday of the second week.", "Fictional sample description."], "services": [{"time": "17:00", "title": "Evening service", "hours": "Open from 16:30", "priest": "Priest: example"}]},
+    {"date": "2026-04-05", "description": ["Entry of the Lord into Jerusalem."], "services": [{"time": "09:00", "title": "Divine Liturgy", "hours": "Open from 08:30", "priest": "Priest: example"}]},
+    {"date": "2026-04-07", "description": ["Annunciation of the Theotokos."], "services": [{"time": "10:00", "title": "Festal Liturgy", "hours": "", "priest": ""}]},
+    {"date": "2026-04-12", "description": ["Pascha."], "services": [{"time": "00:00", "title": "Paschal service", "hours": "", "priest": "Priest: example"}]}
+  ]
+}
